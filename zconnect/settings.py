@@ -103,3 +103,14 @@ CSRF_TRUSTED_ORIGINS = [
     'http://187.127.131.93:8001',
     'http://srv1499287.hstgr.cloud',
 ]
+
+# Add to CSRF_TRUSTED_ORIGINS if not already there
+CSRF_TRUSTED_ORIGINS += [
+    'https://zayroconnect.tech',
+    'https://www.zayroconnect.tech',
+]
+
+# Allow CSRF to work with HTTPS
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
