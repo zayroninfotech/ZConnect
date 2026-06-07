@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope['user']
@@ -23,31 +24,50 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data = json.loads(text_data)
         except (json.JSONDecodeError, ValueError):
             return
-        msg_type = data.get('type','message')
+        msg_type = data.get('type', 'message')
+
         if msg_type == 'message':
-            content = data.get('content','').strip()
+            content = data.get('content', '').strip()
             if not content:
                 return
             msg = await self.save_message(content)
             if msg:
-                await self.channel_layer.group_send(self.group_name, {'type':'chat_message','data':msg.to_dict()})
+                await self.channel_layer.group_send(self.group_name, {
+                    'type': 'chat_message',
+                    'data': msg.to_dict(),
+                })
+
         elif msg_type == 'typing':
-            await self.channel_layer.group_send(self.group_name, {'type':'typing_notify','user_id':self.user.id,'user_name':self.user.get_display_name(),'is_typing':data.get('is_typing',False)})
+            await self.channel_layer.group_send(self.group_name, {
+                'type': 'typing_notify',
+                'user_id': self.user.id,
+                'user_name': self.user.get_display_name(),
+                'is_typing': data.get('is_typing', False),
+            })
+
         elif msg_type == 'delete':
             msg_id = data.get('msg_id')
             deleted = await self.delete_message(msg_id)
             if deleted:
-                await self.channel_layer.group_send(self.group_name, {'type':'message_deleted','msg_id':msg_id})
+                await self.channel_layer.group_send(self.group_name, {
+                    'type': 'message_deleted',
+                    'msg_id': msg_id,
+                })
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps({'type':'message','data':event['data']}))
+        await self.send(text_data=json.dumps({'type': 'message', 'data': event['data']}))
 
     async def typing_notify(self, event):
         if event['user_id'] != self.user.id:
-            await self.send(text_data=json.dumps({'type':'typing','user_id':event['user_id'],'user_name':event['user_name'],'is_typing':event['is_typing']}))
+            await self.send(text_data=json.dumps({
+                'type': 'typing',
+                'user_id': event['user_id'],
+                'user_name': event['user_name'],
+                'is_typing': event['is_typing'],
+            }))
 
     async def message_deleted(self, event):
-        await self.send(text_data=json.dumps({'type':'deleted','msg_id':event['msg_id']}))
+        await self.send(text_data=json.dumps({'type': 'deleted', 'msg_id': event['msg_id']}))
 
     @database_sync_to_async
     def save_message(self, content):

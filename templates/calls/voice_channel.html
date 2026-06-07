@@ -1,31 +1,71 @@
 {% extends 'base.html' %}
 {% block title %}🔊 {{ channel.name }} — {{ project.name }}{% endblock %}
 {% with current_project=project %}
+
 {% block sidebar %}
 <nav class="sidebar-channels">
-  <div class="sc-header" onclick="window.location='/project/{{ project.id }}/'"><h2>{{ project.icon }} {{ project.name }}</h2></div>
-  <div class="sc-body">
-    <div class="sc-section"><div class="sc-section-title">Text Channels</div>{% for ch in text_channels %}<a href="/project/{{ project.id }}/channel/{{ ch.id }}/" class="ch-item"><span class="ch-icon">#</span><span class="ch-name">{{ ch.name }}</span></a>{% endfor %}</div>
-    <div class="sc-section"><div class="sc-section-title">Voice Channels</div>{% for ch in voice_channels %}<a href="/project/{{ project.id }}/channel/{{ ch.id }}/" class="ch-item {% if channel.id == ch.id %}active{% endif %}"><span class="ch-icon">🔊</span><span class="ch-name">{{ ch.name }}</span></a>{% endfor %}</div>
+  <div class="sc-header" onclick="window.location='/project/{{ project.id }}/'">
+    <h2>{{ project.icon }} {{ project.name }}</h2>
   </div>
-  <div class="sc-userbar"><div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div><div style="flex:1;min-width:0"><div class="ub-name">{{ user.get_display_name }}</div></div><a href="/logout/" class="btn btn-ghost btn-icon" onclick="return confirm('Sign out?')">🚪</a></div>
+  <div class="sc-body">
+    <div class="sc-section">
+      <div class="sc-section-title">Text Channels</div>
+      {% for ch in text_channels %}
+      <a href="/project/{{ project.id }}/channel/{{ ch.id }}/" class="ch-item">
+        <span class="ch-icon">#</span><span class="ch-name">{{ ch.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="sc-section">
+      <div class="sc-section-title">Voice Channels</div>
+      {% for ch in voice_channels %}
+      <a href="/project/{{ project.id }}/channel/{{ ch.id }}/"
+         class="ch-item {% if channel.id == ch.id %}active{% endif %}">
+        <span class="ch-icon">🔊</span><span class="ch-name">{{ ch.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="sc-userbar">
+    <div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div>
+    <div style="flex:1;min-width:0"><div class="ub-name">{{ user.get_display_name }}</div></div>
+    <a href="/logout/" class="btn btn-ghost btn-icon" onclick="return confirm('Sign out?')">🚪</a>
+  </div>
 </nav>
 {% endblock %}
+
 {% block content %}
-<div class="content-header"><span class="ch-icon-lg">🔊</span><h3>{{ channel.name }}</h3></div>
+<div class="content-header">
+  <span class="ch-icon-lg">🔊</span>
+  <h3>{{ channel.name }}</h3>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-sm" onclick="joinVoiceChannel()">Join Voice</button>
+  </div>
+</div>
+
 <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:40px">
   <div style="font-size:64px">🔊</div>
   <h2 style="font-size:22px;font-weight:700">{{ channel.name }}</h2>
   <p style="color:var(--text-3);font-size:14px">Voice channel in {{ project.name }}</p>
-  <div style="display:flex;gap:12px">
+  <div style="display:flex;gap:12px;margin-top:8px">
     <button class="btn btn-primary" onclick="joinVoiceCall('video')">🎥 Join with Video</button>
     <button class="btn btn-secondary" onclick="joinVoiceCall('audio')">🎙️ Join Audio Only</button>
   </div>
+  <p style="font-size:12px;color:var(--text-3);margin-top:8px">A new call room will open in a new tab</p>
 </div>
 {% endblock %}
+
 {% endwith %}
 {% block extra_js %}
 <script>
-function joinVoiceCall(type){fetch('/call/start/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},body:new URLSearchParams({type,channel_id:'{{ channel.id }}'})}).then(r=>r.json()).then(d=>{if(d.success)window.open(d.redirect,'_blank');});}
+function joinVoiceCall(type) {
+  fetch('/call/start/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+    body: new URLSearchParams({ type, channel_id: '{{ channel.id }}' })
+  }).then(r => r.json()).then(d => {
+    if (d.success) window.open(d.redirect, '_blank');
+  });
+}
 </script>
 {% endblock %}

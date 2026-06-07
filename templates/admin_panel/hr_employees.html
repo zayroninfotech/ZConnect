@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}HR - Employee Management — ZConnect{% endblock %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>👔 HR Manager</h2>
+    <p>Employee Management</p>
+  </div>
+  <div class="sc-body">
+    <div class="sc-section">
+      <a href="{% url 'hr_employees' %}" class="ch-item active">
+        <span>👥 My Employees</span>
+      </a>
+      <a href="{% url 'dashboard' %}" class="ch-item">
+        <span>🏠 Dashboard</span>
+      </a>
+      <a href="{% url 'logout' %}" class="ch-item">
+        <span>🚪 Logout</span>
+      </a>
+    </div>
+  </div>
+  <div class="sc-userbar">
+    <div class="avatar-wrap">
+      <div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="ub-name">{{ user.get_display_name }}</div>
+      <div class="ub-tag">HR Manager</div>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <span class="ch-icon-lg">👥</span>
+  <h3>Employee Management</h3>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-sm" onclick="openModal('create-employee-modal')">
+      + Add Employee
+    </button>
+  </div>
+</div>
+
+<div class="dashboard-content">
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <!-- Stats Card -->
+  <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 32px;">
+    <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Total Employees</div>
+    <div style="font-size: 28px; font-weight: 700;">{{ total_employees }}</div>
+  </div>
+
+  <!-- Employees Table -->
+  <div style="background: var(--bg-sidebar-r); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+    {% if employees %}
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: var(--bg-active); border-bottom: 1px solid var(--border);">
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Employee</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Email</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Status</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Joined</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for employee in employees %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="avatar avatar-32" style="background: var(--accent);">{{ employee.get_initials }}</div>
+              <div>
+                <div style="font-weight: 600;">{{ employee.get_display_name }}</div>
+                <div style="font-size: 12px; color: var(--text-3);">@{{ employee.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="padding: 16px; color: var(--text-2);">{{ employee.email }}</td>
+          <td style="padding: 16px;">
+            {% if employee.is_active %}
+            <span style="color: #23a55a;">● Active</span>
+            {% else %}
+            <span style="color: #f23f43;">● Inactive</span>
+            {% endif %}
+          </td>
+          <td style="padding: 16px; color: var(--text-3); font-size: 12px;">
+            {{ employee.date_joined|date:"M d, Y" }}
+          </td>
+          <td style="padding: 16px;">
+            <button class="btn btn-sm btn-secondary" onclick="manageEmployee({{ employee.id }})">Manage</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: var(--text-3);">
+      <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+      <p>No employees yet. Create your first employee to get started!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Create Employee Modal -->
+<div class="modal-backdrop" id="create-employee-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Employee</h3>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username *</label>
+        <input type="text" name="username" class="form-control" placeholder="employee_name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input type="text" name="display_name" class="form-control" placeholder="Full Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" placeholder="employee@company.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function manageEmployee(employeeId) {
+  // TODO: Implement employee management
+  alert('Manage employee ' + employeeId);
+}
+</script>
+{% endblock %}

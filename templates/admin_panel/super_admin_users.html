@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}Super Admin - User Management — ZConnect{% endblock %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>⚙️ Super Admin</h2>
+    <p>User Management</p>
+  </div>
+  <div class="sc-body">
+    <div class="sc-section">
+      <a href="{% url 'super_admin_users' %}" class="ch-item active">
+        <span>👥 All Users</span>
+      </a>
+      <a href="{% url 'dashboard' %}" class="ch-item">
+        <span>🏠 Dashboard</span>
+      </a>
+      <a href="{% url 'logout' %}" class="ch-item">
+        <span>🚪 Logout</span>
+      </a>
+    </div>
+  </div>
+  <div class="sc-userbar">
+    <div class="avatar-wrap">
+      <div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="ub-name">{{ user.get_display_name }}</div>
+      <div class="ub-tag">Super Admin</div>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <span class="ch-icon-lg">⚙️</span>
+  <h3>User Management</h3>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-sm" onclick="openModal('create-user-modal')">
+      + Create User
+    </button>
+  </div>
+</div>
+
+<div class="dashboard-content">
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <!-- Stats Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Total Users</div>
+      <div style="font-size: 28px; font-weight: 700;">{{ users.count }}</div>
+    </div>
+    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Super Admins</div>
+      <div style="font-size: 28px; font-weight: 700;">{{ super_admins }}</div>
+    </div>
+    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">HR Managers</div>
+      <div style="font-size: 28px; font-weight: 700;">{{ hrs }}</div>
+    </div>
+    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Employees</div>
+      <div style="font-size: 28px; font-weight: 700;">{{ employees }}</div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div style="background: var(--bg-sidebar-r); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: var(--bg-active); border-bottom: 1px solid var(--border);">
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">User</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Email</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Role</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Status</th>
+          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="avatar avatar-32" style="background: var(--accent);">{{ user.get_initials }}</div>
+              <div>
+                <div style="font-weight: 600;">{{ user.get_display_name }}</div>
+                <div style="font-size: 12px; color: var(--text-3);">@{{ user.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="padding: 16px; color: var(--text-2);">{{ user.email }}</td>
+          <td style="padding: 16px;">
+            <span style="background: var(--bg-active); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+              {{ user.get_role_display }}
+            </span>
+          </td>
+          <td style="padding: 16px;">
+            {% if user.is_active %}
+            <span style="color: #23a55a;">● Active</span>
+            {% else %}
+            <span style="color: #f23f43;">● Inactive</span>
+            {% endif %}
+          </td>
+          <td style="padding: 16px;">
+            <button class="btn btn-sm btn-secondary" onclick="editUser({{ user.id }})">Edit</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="padding: 24px; text-align: center; color: var(--text-3);">No users found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-backdrop" id="create-user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create New User</h3>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username *</label>
+        <input type="text" name="username" class="form-control" placeholder="johndoe" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input type="text" name="display_name" class="form-control" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" placeholder="john@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role *</label>
+        <select name="role" class="form-control" required>
+          <option value="employee">Employee</option>
+          <option value="hr">HR Manager</option>
+          <option value="super_admin">Super Admin</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function editUser(userId) {
+  // TODO: Implement edit user modal
+  alert('Edit user ' + userId);
+}
+</script>
+{% endblock %}

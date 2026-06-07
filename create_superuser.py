@@ -1,3 +1,7 @@
+"""
+Run this once to create the super admin account:
+  python create_superuser.py
+"""
 import os, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zconnect.settings')
 django.setup()
@@ -15,4 +19,5 @@ else:
     u.is_super_admin = True
     u.display_name   = "Super Admin"
     u.save()
-    print(f"\n Super admin '{username}' created!")
+    print(f"\n✅ Super admin '{username}' created!")
+    print(f"   Login at http://127.0.0.1:8000/login/")

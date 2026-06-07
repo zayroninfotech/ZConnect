@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Settings — {{ project.name }}{% endblock %}
+{% with current_project=project %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>{{ project.icon }} {{ project.name }}</h2>
+  </div>
+  <div class="sc-body">
+    <div class="sc-section">
+      <div class="sc-section-title">Text Channels</div>
+      {% for ch in text_channels %}
+      <a href="/project/{{ project.id }}/channel/{{ ch.id }}/" class="ch-item">
+        <span class="ch-icon">#</span><span class="ch-name">{{ ch.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h3>⚙️ Project Settings</h3>
+</div>
+<div class="dashboard-content" style="max-width:600px">
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;padding:24px;margin-bottom:16px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">General</h3>
+    <form id="project-settings-form" data-project-id="{{ project.id }}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Project Name</label>
+        <input type="text" name="name" class="form-control" value="{{ project.name }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3">{{ project.description }}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Icon (emoji)</label>
+          <input type="text" name="icon" class="form-control" value="{{ project.icon }}" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" name="color" class="form-control" value="{{ project.color }}" style="height:42px;padding:4px">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <a href="/project/{{ project.id }}/" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;padding:24px;margin-bottom:16px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Invite Link</h3>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px">Share this link to invite people</p>
+    <div style="display:flex;gap:8px;align-items:center;background:var(--bg-hover);padding:10px 14px;border-radius:8px">
+      <code style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ request.scheme }}://{{ request.get_host }}/join/{{ project.invite_code }}/</code>
+      <button class="btn btn-secondary btn-sm" data-copy="{{ request.scheme }}://{{ request.get_host }}/join/{{ project.invite_code }}/">Copy</button>
+    </div>
+  </div>
+
+  <div style="background:rgba(242,63,67,.08);border:1px solid rgba(242,63,67,.2);border-radius:12px;padding:24px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;color:var(--danger)">Danger Zone</h3>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px">Deleting the project is permanent and cannot be undone.</p>
+    <button class="btn btn-danger" id="delete-project-btn" data-project-id="{{ project.id }}">Delete Project</button>
+  </div>
+</div>
+{% endblock %}
+
+{% endwith %}
+{% block extra_js %}
+<script src="/static/js/main.js"></script>
+<script>
+const psForm = document.getElementById('project-settings-form');
+if (psForm) {
+  psForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(psForm);
+    const res = await postJSON(`/project/${psForm.dataset.projectId}/settings/`, Object.fromEntries(fd));
+    if (res.success) { showToast('Saved!', 'success'); setTimeout(() => location.reload(), 600); }
+    else showToast(res.error || 'Failed', 'error');
+  });
+}
+</script>
+{% endblock %}

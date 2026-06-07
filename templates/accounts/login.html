@@ -14,11 +14,13 @@
       <h1>ZConnect</h1>
       <p>Team collaboration platform</p>
     </div>
+
     {% if messages %}
     <ul class="messages">
       {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
     </ul>
     {% endif %}
+
     <form method="POST" action="/login/">
       {% csrf_token %}
       <div class="form-group">
@@ -29,9 +31,14 @@
         <label class="form-label">Password</label>
         <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">Sign In</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
+        Sign In
+      </button>
     </form>
-    <div class="auth-footer">Don't have an account? <a href="/register/">Create one</a></div>
+
+    <div class="auth-footer">
+      Contact your Super Admin or HR to create an account
+    </div>
   </div>
 </div>
 </body>

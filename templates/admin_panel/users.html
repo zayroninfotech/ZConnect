@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users — ZConnect{% endblock %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>⚙️ Admin Panel</h2>
+  </div>
+  <div class="sc-body">
+    <div class="sc-section">
+      <div class="sc-section-title">Management</div>
+      <a href="/admin-panel/" class="ch-item">
+        <span class="ch-icon">📊</span><span class="ch-name">Dashboard</span>
+      </a>
+      <a href="/admin-panel/users/" class="ch-item active">
+        <span class="ch-icon">👥</span><span class="ch-name">Users</span>
+      </a>
+      <a href="/dashboard/" class="ch-item">
+        <span class="ch-icon">🏠</span><span class="ch-name">Back to App</span>
+      </a>
+    </div>
+  </div>
+  <div class="sc-userbar">
+    <div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div>
+    <div style="flex:1;min-width:0"><div class="ub-name">{{ user.get_display_name }}</div><div class="ub-tag">Super Admin</div></div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <span class="ch-icon-lg">👥</span>
+  <h3>Manage Users</h3>
+  <div class="header-actions">
+    <input type="text" id="user-search" class="form-control" placeholder="Search users..." style="width:200px;padding:6px 10px;font-size:13px">
+  </div>
+</div>
+
+<div class="dashboard-content">
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse" id="users-table">
+      <thead>
+        <tr style="background:var(--bg-hover)">
+          <th style="text-align:left;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">User</th>
+          <th style="text-align:left;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Email</th>
+          <th style="text-align:left;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Status</th>
+          <th style="text-align:left;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Role</th>
+          <th style="text-align:left;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Joined</th>
+          <th style="text-align:center;padding:12px 16px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr style="border-top:1px solid var(--border)" id="user-row-{{ u.id }}" data-name="{{ u.get_display_name|lower }} {{ u.username|lower }} {{ u.email|lower }}">
+          <td style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar avatar-36" style="background:var(--accent)">
+                {% if u.avatar %}<img src="{{ u.avatar.url }}" alt="">{% else %}{{ u.get_initials }}{% endif %}
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600">{{ u.get_display_name }}</div>
+                <div style="font-size:11px;color:var(--text-3)">@{{ u.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="padding:12px 16px;font-size:13px;color:var(--text-2)">{{ u.email }}</td>
+          <td style="padding:12px 16px">
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ u.get_status_color }}"></span>
+              {{ u.get_status_display }}
+            </span>
+          </td>
+          <td style="padding:12px 16px">
+            {% if u.is_super_admin %}<span class="badge badge-danger">Super Admin</span>
+            {% elif u.is_staff %}<span class="badge badge-accent">Staff</span>
+            {% else %}<span class="badge" style="background:var(--bg-hover);color:var(--text-2)">User</span>{% endif %}
+          </td>
+          <td style="padding:12px 16px;font-size:12px;color:var(--text-3)">{{ u.date_joined|date:"M d, Y" }}</td>
+          <td style="padding:12px 16px;text-align:center">
+            {% if u != user %}
+            <div style="display:flex;gap:6px;justify-content:center">
+              <button class="btn btn-sm {% if u.is_active %}btn-secondary{% else %}btn-danger{% endif %}"
+                      onclick="toggleUser({{ u.id }}, this)"
+                      data-active="{{ u.is_active|yesno:'true,false' }}"
+                      title="{% if u.is_active %}Disable{% else %}Enable{% endif %}">
+                {% if u.is_active %}✅ Active{% else %}❌ Disabled{% endif %}
+              </button>
+              <button class="btn btn-sm btn-secondary"
+                      onclick="toggleAdmin({{ u.id }}, this)"
+                      title="Toggle admin">
+                {% if u.is_super_admin %}👑 Admin{% else %}👤 User{% endif %}
+              </button>
+            </div>
+            {% else %}
+            <span style="font-size:12px;color:var(--text-3)">You</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/main.js"></script>
+<script>
+async function toggleUser(userId, btn) {
+  const res = await postJSON(`/admin-panel/users/${userId}/toggle/`, {});
+  if (res.success) {
+    btn.className = `btn btn-sm ${res.is_active ? 'btn-secondary' : 'btn-danger'}`;
+    btn.textContent = res.is_active ? '✅ Active' : '❌ Disabled';
+    btn.dataset.active = res.is_active;
+    showToast(res.is_active ? 'User enabled' : 'User disabled', res.is_active ? 'success' : 'warn');
+  } else {
+    showToast(res.error || 'Failed', 'error');
+  }
+}
+
+async function toggleAdmin(userId, btn) {
+  const res = await postJSON(`/admin-panel/users/${userId}/make-admin/`, {});
+  if (res.success) {
+    btn.textContent = res.is_super_admin ? '👑 Admin' : '👤 User';
+    showToast(res.is_super_admin ? 'Admin granted' : 'Admin removed', 'success');
+  } else {
+    showToast(res.error || 'Failed', 'error');
+  }
+}
+
+// Search filter
+document.getElementById('user-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#users-table tbody tr').forEach(row => {
+    row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}
