@@ -398,13 +398,14 @@ a:hover { color: var(--accent-h); }
 .form-group { margin-bottom: 16px; }
 .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
 .form-control {
-  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-  border-radius: 8px; padding: 9px 12px; color: var(--text-1);
+  width: 100%; background: var(--bg-input); border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 10px; padding: 12px 14px; color: var(--text-1);
   font-size: 14px; font-family: inherit; outline: none;
-  transition: border-color .15s;
+  transition: all .2s;
 }
-.form-control:focus { border-color: var(--accent); }
-.form-control::placeholder { color: var(--text-3); }
+.form-control:hover { border-color: rgba(255,255,255,0.18); }
+.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,191,0.2); background: rgba(124,92,191,0.05); }
+.form-control::placeholder { color: var(--text-3); opacity: 0.7; }
 textarea.form-control { resize: vertical; min-height: 80px; }
 select.form-control { cursor: pointer; }
 .form-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
@@ -418,9 +419,10 @@ select.form-control { cursor: pointer; }
   overflow-y: auto;
 }
 .auth-card {
-  background: var(--bg-sidebar-r); border-radius: 16px;
-  padding: 40px; width: 420px; max-width: 95vw;
-  box-shadow: var(--shadow);
+  background: var(--bg-sidebar-r); border-radius: 20px;
+  padding: 48px; width: 420px; max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 .auth-logo { text-align: center; margin-bottom: 24px; }
 .auth-logo .logo-icon {
