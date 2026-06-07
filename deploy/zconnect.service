@@ -1,0 +1,20 @@
+[Unit]
+Description=ZConnect - Teams App (Daphne ASGI)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/zconnect
+EnvironmentFile=/var/www/zconnect/.env
+ExecStart=/var/www/zconnect/venv/bin/daphne \
+    -b 127.0.0.1 \
+    -p 8002 \
+    zconnect.asgi:application
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

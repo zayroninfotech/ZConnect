@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.get_display_name }} — ZConnect{% endblock %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>Profile</h2>
+  </div>
+  <div class="sc-body">
+    {% if all_projects %}
+    <div class="sc-section">
+      <div class="sc-section-title">Projects</div>
+      {% for project in all_projects %}
+      <a href="/project/{{ project.id }}/" class="ch-item">
+        <span class="ch-icon">{{ project.icon }}</span>
+        <span class="ch-name">{{ project.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  {% if messages %}
+  <ul class="messages" style="margin-bottom:16px">
+    {% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="profile-header">
+    <div class="avatar-wrap">
+      <div class="avatar avatar-80" style="background:var(--accent)">
+        {% if profile_user.avatar %}
+          <img src="{{ profile_user.avatar.url }}" alt="">
+        {% else %}
+          {{ profile_user.get_initials }}
+        {% endif %}
+      </div>
+      <div class="status-dot" style="background:{{ profile_user.get_status_color }};border-color:var(--bg-sidebar-r)"></div>
+    </div>
+    <div class="profile-info" style="flex:1">
+      <h2>{{ profile_user.get_display_name }}</h2>
+      <p style="color:var(--text-3)">@{{ profile_user.username }}</p>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
+        <span class="badge badge-accent">{{ profile_user.get_status_display }}</span>
+        {% if profile_user.is_super_admin %}<span class="badge badge-danger">Super Admin</span>{% endif %}
+        {% if not is_own %}
+        <a href="/dm/{{ profile_user.id }}/" class="btn btn-primary btn-sm">💬 Message</a>
+        <button class="btn btn-secondary btn-sm" onclick="startCallWith({{ profile_user.id }})">📞 Call</button>
+        {% endif %}
+      </div>
+    </div>
+    {% if not is_own %}
+    <div style="text-align:right">
+      <div style="font-size:12px;color:var(--text-3)">{{ profile_user.email }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if profile_user.bio %}
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;padding:20px;margin-bottom:16px">
+    <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:8px">About</h4>
+    <p style="font-size:14px;color:var(--text-1);line-height:1.6">{{ profile_user.bio }}</p>
+  </div>
+  {% endif %}
+
+  {% if common_projects %}
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;padding:20px;margin-bottom:16px">
+    <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:12px">Common Projects</h4>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% for p in common_projects %}
+      <a href="/project/{{ p.id }}/" class="btn btn-secondary btn-sm">{{ p.icon }} {{ p.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_own %}
+  <div style="background:var(--bg-sidebar-r);border-radius:12px;padding:20px">
+    <h4 style="font-size:16px;font-weight:700;margin-bottom:20px">Edit Profile</h4>
+    <form method="POST" enctype="multipart/form-data" action="/profile/">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" name="display_name" class="form-control" value="{{ form.display_name.value|default:'' }}" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}" placeholder="Phone number">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="online" {% if profile_user.status == 'online' %}selected{% endif %}>🟢 Online</option>
+            <option value="away" {% if profile_user.status == 'away' %}selected{% endif %}>🟡 Away</option>
+            <option value="busy" {% if profile_user.status == 'busy' %}selected{% endif %}>🔴 Busy</option>
+            <option value="offline" {% if profile_user.status == 'offline' %}selected{% endif %}>⚫ Offline</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea name="bio" class="form-control" rows="3" placeholder="Tell something about yourself...">{{ form.bio.value|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Profile Picture</label>
+        <input type="file" name="avatar" class="form-control" accept="image/*">
+        {% if profile_user.avatar %}<div class="form-hint">Current: {{ profile_user.avatar.name }}</div>{% endif %}
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function startCallWith(userId) {
+  fetch('/call/start/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+    body: new URLSearchParams({ type: 'video' })
+  }).then(r => r.json()).then(d => {
+    if (d.success) window.location.href = d.redirect;
+  });
+}
+</script>
+{% endblock %}

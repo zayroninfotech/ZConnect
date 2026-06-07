@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call — ZConnect</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<style>
+  body { background: #0d0e1a; overflow: hidden; }
+</style>
+</head>
+<body>
+<div class="call-page" id="call-root"
+     data-room-id="{{ room_id }}"
+     data-my-id="{{ my_id }}"
+     data-my-name="{{ my_name }}"
+     data-my-initials="{{ my_initials }}"
+     data-call-type="{{ call_type }}">
+
+  <!-- Header -->
+  <div class="call-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#23a55a;animation:pulse 2s infinite"></div>
+      <span class="call-title">
+        {% if call and call.channel %}
+          🔊 {{ call.channel.project.name }} / {{ call.channel.name }}
+        {% else %}
+          {{ call_type|capfirst }} Call
+        {% endif %}
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="call-timer" class="call-timer">00:00</span>
+      <a href="/dashboard/" class="btn btn-ghost btn-sm" style="font-size:12px">← Back</a>
+    </div>
+  </div>
+
+  <!-- Video grid -->
+  <div class="call-videos" id="call-videos"></div>
+
+  <!-- Controls bar -->
+  <div class="call-bar">
+    <button id="btn-mute" class="call-btn" title="Mute/Unmute">🎙️</button>
+    <button id="btn-cam" class="call-btn" title="Camera on/off">🎥</button>
+    <button id="btn-screen" class="call-btn" title="Share screen">🖥️</button>
+    <button id="btn-end" class="call-btn end-call" title="End call">📵</button>
+  </div>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}
+</style>
+
+<script src="/static/js/main.js"></script>
+<script src="/static/js/webrtc.js"></script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}Create Project — ZConnect{% endblock %}
+
+{% block sidebar %}
+<nav class="sidebar-channels">
+  <div class="sc-header">
+    <h2>New Project</h2>
+  </div>
+  <div class="sc-body">
+    {% if all_projects %}
+    <div class="sc-section">
+      <div class="sc-section-title">Your Projects</div>
+      {% for project in all_projects %}
+      <a href="/project/{{ project.id }}/" class="ch-item">
+        <span class="ch-icon">{{ project.icon }}</span>
+        <span class="ch-name">{{ project.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div class="sc-section">
+      <a href="/dashboard/" class="ch-item">
+        <span class="ch-icon">🏠</span>
+        <span class="ch-name">Back to Dashboard</span>
+      </a>
+    </div>
+  </div>
+  <div class="sc-userbar">
+    <div class="avatar-wrap">
+      <div class="avatar avatar-32" style="background:var(--accent)">{{ user.get_initials }}</div>
+      <div class="status-dot my-status-dot" style="background:{{ user.get_status_color }};border-color:var(--bg-sidebar-r)"></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="ub-name">{{ user.get_display_name }}</div>
+      <div class="ub-tag">@{{ user.username }}</div>
+    </div>
+    <a href="/logout/" class="btn btn-ghost btn-icon" title="Logout" onclick="return confirm('Sign out?')">🚪</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <span class="ch-icon-lg">✨</span>
+  <h3>Create a New Project</h3>
+</div>
+
+<div class="dashboard-content" style="max-width:560px">
+  {% if messages %}
+  <ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <div style="background:var(--bg-sidebar-r);border-radius:16px;padding:32px;border:1px solid var(--border)">
+    <div style="text-align:center;margin-bottom:28px">
+      <div id="icon-preview" style="width:72px;height:72px;border-radius:20px;background:#7c5cbf;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;transition:background .2s">💼</div>
+      <p style="color:var(--text-3);font-size:13px">Customize your project's look below</p>
+    </div>
+
+    <form id="create-project-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Project Name *</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Marketing Campaign, Product v2.0" required autofocus id="project-name-input">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="What is this project about? (optional)"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Icon (Emoji)</label>
+          <input type="text" name="icon" id="icon-input" class="form-control" value="💼" placeholder="Pick an emoji" maxlength="4" style="font-size:22px;text-align:center">
+          <div class="form-hint">Paste or type any emoji</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" name="color" id="color-input" class="form-control" value="#7c5cbf" style="height:46px;padding:4px 6px;cursor:pointer">
+          <div class="form-hint">Choose a brand color</div>
+        </div>
+      </div>
+
+      <!-- Quick emoji picker -->
+      <div class="form-group">
+        <label class="form-label">Quick Emoji Pick</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="emoji-grid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:24px">
+        <a href="/dashboard/" class="btn btn-secondary" style="flex:1;justify-content:center">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="flex:2;justify-content:center;padding:11px">
+          ✨ Create Project
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div style="margin-top:20px;background:var(--bg-sidebar-r);border-radius:12px;padding:16px;border:1px solid var(--border)">
+    <div style="font-size:12px;color:var(--text-3);line-height:1.8">
+      <strong style="color:var(--text-2)">What gets created automatically:</strong><br>
+      📝 #general — main text channel<br>
+      📢 #announcements — team updates<br>
+      🔊 General Voice — voice/video channel
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/main.js"></script>
+<script>
+const iconInput  = document.getElementById('icon-input');
+const colorInput = document.getElementById('color-input');
+const preview    = document.getElementById('icon-preview');
+
+function updatePreview() {
+  preview.textContent = iconInput.value || '💼';
+  preview.style.background = colorInput.value;
+}
+iconInput.addEventListener('input', updatePreview);
+colorInput.addEventListener('input', updatePreview);
+
+// Populate emoji grid
+const emojis = ['💼','🚀','🎯','💡','🔥','🌟','📊','🎨','🛠️','📱','🌍','🏆','💬','🔬','🎮','🎵','🏗️','📚','🤖','💪','🦁','🐉','🌈','⚡','🍀'];
+const grid = document.getElementById('emoji-grid');
+emojis.forEach(em => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'emoji-pick-btn';
+  btn.dataset.emoji = em;
+  btn.textContent = em;
+  btn.style.cssText = 'width:36px;height:36px;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .1s';
+  btn.addEventListener('click', () => {
+    iconInput.value = em;
+    updatePreview();
+    document.querySelectorAll('.emoji-pick-btn').forEach(b => { b.style.background='var(--bg-hover)'; b.style.borderColor='var(--border)'; });
+    btn.style.background = 'rgba(124,92,191,0.2)';
+    btn.style.borderColor = 'var(--accent)';
+  });
+  grid.appendChild(btn);
+});
+
+// Form submit
+document.getElementById('create-project-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('[type=submit]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Creating...';
+
+  const fd = new FormData(e.target);
+  const res = await postJSON('/project/create/', Object.fromEntries(fd));
+
+  if (res.success) {
+    showToast('Project created! Redirecting...', 'success');
+    setTimeout(() => window.location.href = res.redirect, 600);
+  } else {
+    showToast(res.error || 'Failed to create project', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '✨ Create Project';
+  }
+});
+</script>
+{% endblock %}
