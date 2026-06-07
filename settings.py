@@ -3,6 +3,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env file if present (production server)
+_env_file = BASE_DIR / '.env'
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith('#') and '=' in _line:
+            _k, _v = _line.split('=', 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'zconnect-secret-key-change-in-production-xyz123abc')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
@@ -96,3 +105,14 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
 
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days
 SESSION_SAVE_EVERY_REQUEST = True
+
+# Production security
+CSRF_TRUSTED_ORIGINS = [
+    'http://187.127.131.93',
+    'https://187.127.131.93',
+    'http://srv1499287.hstgr.cloud',
+    'https://srv1499287.hstgr.cloud',
+]
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
