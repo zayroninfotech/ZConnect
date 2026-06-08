@@ -362,6 +362,31 @@
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn.loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.loader {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 @media (max-width: 1024px) {
   .content-grid {
     grid-template-columns: 1fr;
@@ -817,4 +842,19 @@
   }
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const createUserForm = document.querySelector('form[method="POST"]');
+  const createUserBtn = createUserForm.querySelector('button[type="submit"]');
+
+  createUserForm.addEventListener('submit', function(e) {
+    createUserBtn.disabled = true;
+    createUserBtn.classList.add('loading');
+    createUserBtn.innerHTML = '<span class="loader"></span> Creating...';
+  });
+});
+</script>
 {% endblock %}
