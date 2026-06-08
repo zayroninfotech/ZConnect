@@ -363,7 +363,10 @@
 }
 
 @keyframes spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
@@ -372,19 +375,99 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   pointer-events: none;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .loader {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top: 3px solid #ffffff;
+  border-right: 3px solid #ffffff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.confirmation-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-modal.active {
+  display: flex;
+}
+
+.confirmation-modal-content {
+  background: linear-gradient(135deg, #1e2030 0%, #252736 100%);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 16px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: 90%;
+  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.confirmation-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.confirmation-modal-message {
+  font-size: 14px;
+  color: #cbd5e1;
+  margin: 0 0 28px 0;
+  line-height: 1.5;
+}
+
+.confirmation-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirmation-modal-actions .btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.confirmation-modal-actions .btn-confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.confirmation-modal-actions .btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.confirmation-modal-actions .btn-cancel {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.confirmation-modal-actions .btn-cancel:hover {
+  background: rgba(96, 165, 250, 0.15);
 }
 
 @media (max-width: 1024px) {
@@ -527,7 +610,7 @@
             <td>
               <form method="POST" action="{% url 'delete_user' user.id %}" style="display: inline;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete {{ user.username }}? This action cannot be undone.');">
+                <button type="button" class="btn btn-danger btn-sm" onclick="showConfirmation('{{ user.username }}', this.closest('form'));">
                   Delete
                 </button>
               </form>
@@ -543,6 +626,18 @@
       {% endif %}
     </div>
   </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="confirmation-modal" id="confirmationModal">
+  <div class="confirmation-modal-content">
+    <h2 class="confirmation-modal-title">Confirm Delete</h2>
+    <p class="confirmation-modal-message" id="confirmationMessage"></p>
+    <div class="confirmation-modal-actions">
+      <button type="button" class="btn btn-cancel" onclick="cancelDelete()">Cancel</button>
+      <button type="button" class="btn btn-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
   </div>
 </div>
 
@@ -846,14 +941,78 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const createUserForm = document.querySelector('form[method="POST"]');
-  const createUserBtn = createUserForm.querySelector('button[type="submit"]');
+let pendingForm = null;
 
-  createUserForm.addEventListener('submit', function(e) {
-    createUserBtn.disabled = true;
-    createUserBtn.classList.add('loading');
-    createUserBtn.innerHTML = '<span class="loader"></span> Creating...';
+function showConfirmation(username, form) {
+  const modal = document.getElementById('confirmationModal');
+  const message = document.getElementById('confirmationMessage');
+  message.textContent = `Are you sure you want to delete "${username}"? This action cannot be undone.`;
+  modal.classList.add('active');
+  pendingForm = form;
+}
+
+function cancelDelete() {
+  const modal = document.getElementById('confirmationModal');
+  modal.classList.remove('active');
+  pendingForm = null;
+}
+
+function confirmDelete() {
+  const modal = document.getElementById('confirmationModal');
+  modal.classList.remove('active');
+
+  if (pendingForm) {
+    const btn = pendingForm.querySelector('button[type="submit"]');
+    if (btn && !btn.classList.contains('loading')) {
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      const loaderHTML = '<span class="loader" style="display: inline-block; margin-right: 8px;"></span>';
+      btn.innerHTML = loaderHTML + 'Deleting...';
+    }
+    pendingForm.submit();
+  }
+  pendingForm = null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Add loader to create user form
+  const createUserForm = document.querySelector('form[method="POST"][style*="inline"]');
+  if (!createUserForm) {
+    const allForms = document.querySelectorAll('form[method="POST"]');
+    allForms.forEach(form => {
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn && btn.classList.contains('btn-primary')) {
+        form.addEventListener('submit', function(e) {
+          if (btn && !btn.classList.contains('loading')) {
+            btn.disabled = true;
+            btn.classList.add('loading');
+            const loaderHTML = '<span class="loader" style="display: inline-block; margin-right: 8px;"></span>';
+            btn.innerHTML = loaderHTML + 'Creating...';
+          }
+        });
+      }
+    });
+  }
+
+  // Handle delete button clicks with custom modal
+  const deleteButtons = document.querySelectorAll('button.btn-danger');
+  deleteButtons.forEach(btn => {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      const form = btn.closest('form');
+      const row = btn.closest('tr');
+      const username = row ? row.querySelector('td strong') ? row.querySelector('td strong').textContent : 'this user' : 'this user';
+      showConfirmation(username, form);
+      return false;
+    };
+  });
+
+  // Close modal on escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      cancelDelete();
+    }
   });
 });
 </script>

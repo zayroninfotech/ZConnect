@@ -19,6 +19,45 @@ function showToast(msg, type = 'info', duration = 4000) {
   setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = '.3s'; setTimeout(() => toast.remove(), 300); }, duration);
 }
 
+// ── Confirmation dialog ───────────────────────────────────────────────────────
+let confirmationCallback = null;
+
+function showConfirmationDialog(title, message) {
+  return new Promise(resolve => {
+    let modal = document.getElementById('global-confirmation-modal');
+
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'global-confirmation-modal';
+      modal.className = 'confirmation-modal';
+      modal.innerHTML = `
+        <div class="confirmation-modal-content">
+          <h2 class="confirmation-modal-title" id="confirmTitle"></h2>
+          <p class="confirmation-modal-message" id="confirmMessage"></p>
+          <div class="confirmation-modal-actions">
+            <button type="button" class="btn btn-cancel" onclick="closeConfirmationDialog(false)">Cancel</button>
+            <button type="button" class="btn btn-confirm" onclick="closeConfirmationDialog(true)">Confirm</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    modal.classList.add('active');
+
+    confirmationCallback = resolve;
+  });
+}
+
+function closeConfirmationDialog(result) {
+  const modal = document.getElementById('global-confirmation-modal');
+  if (modal) modal.classList.remove('active');
+  if (confirmationCallback) confirmationCallback(result);
+  confirmationCallback = null;
+}
+
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function openModal(id) {
   const el = document.getElementById(id);
@@ -169,7 +208,8 @@ document.querySelectorAll('[data-copy]').forEach(btn => {
 const delProjectBtn = document.getElementById('delete-project-btn');
 if (delProjectBtn) {
   delProjectBtn.addEventListener('click', async () => {
-    if (!confirm('Delete this project? This cannot be undone.')) return;
+    const confirmed = await showConfirmationDialog('Delete Project', 'Delete this project? This action cannot be undone.');
+    if (!confirmed) return;
     const projectId = delProjectBtn.dataset.projectId;
     const res = await postJSON(`/project/${projectId}/delete/`, {});
     if (res.success) {
