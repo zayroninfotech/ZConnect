@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   ZConnect — WebRTC Call Engine
+   ZayronConnect — WebRTC Call Engine
    Supports: video, audio, screen share, group calls
    ═══════════════════════════════════════════ */
 

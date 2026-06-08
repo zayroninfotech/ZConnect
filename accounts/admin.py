@@ -9,5 +9,5 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('status', 'is_super_admin', 'is_active', 'is_staff')
     search_fields = ('username', 'email', 'display_name')
     fieldsets = UserAdmin.fieldsets + (
-        ('ZConnect Profile', {'fields': ('display_name', 'avatar', 'is_super_admin', 'status', 'bio', 'phone')}),
+        ('ZayronConnect Profile', {'fields': ('display_name', 'avatar', 'is_super_admin', 'status', 'bio', 'phone')}),
     )

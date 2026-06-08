@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   ZConnect — Real-time Chat (WebSocket)
+   ZayronConnect — Real-time Chat (WebSocket)
    ═══════════════════════════════════════════ */
 
 class ZChat {

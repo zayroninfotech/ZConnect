@@ -41,7 +41,7 @@ def register_view(request):
             user.status = 'online'
             user.save()
             login(request, user)
-            messages.success(request, f'Welcome to ZConnect, {user.get_display_name()}!')
+            messages.success(request, f'Welcome to ZayronConnect, {user.get_display_name()}!')
             return redirect('dashboard')
     return render(request, 'accounts/register.html', {'form': form})
 
