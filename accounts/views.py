@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .models import User
 from .forms import RegisterForm, ProfileForm
 
@@ -13,12 +14,21 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
+        remember_me = request.POST.get('remember_me') == 'on'
         user = authenticate(request, username=username, password=password)
         if user:
             if not user.is_active:
                 messages.error(request, 'Your account has been disabled.')
                 return render(request, 'accounts/login.html')
             login(request, user)
+
+            # Remember me functionality - set session to persist for 30 days
+            if remember_me:
+                request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days in seconds
+                request.session['remember_me'] = True
+            else:
+                request.session.set_expiry(0)  # Browser session
+
             user.status = 'online'
             user.save(update_fields=['status'])
             next_url = request.GET.get('next', '/dashboard/')
