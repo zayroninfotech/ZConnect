@@ -20,4 +20,8 @@ urlpatterns = [
 
     # HR - Employee Management
     path('hr/employees/', views.hr_employees, name='hr_employees'),
+
+    # User Management (Superadmin)
+    path('user-management/', views.user_management, name='user_management'),
+    path('user-management/delete/<int:user_id>/', views.delete_user, name='delete_user'),
 ]

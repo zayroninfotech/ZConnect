@@ -285,3 +285,72 @@ def hr_employees(request):
         'employees': employees,
         'total_employees': employees.count(),
     })
+
+
+@login_required
+def user_management(request):
+    """Superadmin user management - create and delete users"""
+    if not request.user.is_super_admin:
+        messages.error(request, 'Access denied. Superadmin only.')
+        return redirect('dashboard')
+
+    if request.method == 'POST' and 'create_user' in request.POST:
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        role = request.POST.get('role', 'employee')
+        display_name = request.POST.get('display_name', '').strip()
+
+        if not all([username, email, password, role]):
+            messages.error(request, 'Please fill all required fields.')
+        elif User.objects.filter(username=username).exists():
+            messages.error(request, f'Username "{username}" already exists.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, f'Email "{email}" already exists.')
+        elif role not in ['hr', 'employee']:
+            messages.error(request, 'Invalid role selected.')
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                display_name=display_name or username,
+                role=role,
+                created_by=request.user,
+                is_active=True
+            )
+            messages.success(request, f'User {username} ({role.upper()}) created successfully!')
+            return redirect('user_management')
+
+    # Get all users except superadmin
+    users = User.objects.exclude(role='super_admin').order_by('-date_joined')
+    hr_users = users.filter(role='hr').count()
+    employee_users = users.filter(role='employee').count()
+
+    return render(request, 'accounts/user_management.html', {
+        'users': users,
+        'total_users': users.count(),
+        'hr_count': hr_users,
+        'employee_count': employee_users,
+    })
+
+
+@login_required
+@require_POST
+def delete_user(request, user_id):
+    """Delete user from database"""
+    if not request.user.is_super_admin:
+        return JsonResponse({'success': False, 'message': 'Access denied.'})
+
+    try:
+        user = User.objects.get(id=user_id)
+        if user.is_super_admin:
+            return JsonResponse({'success': False, 'message': 'Cannot delete superadmin users.'})
+
+        username = user.username
+        user.delete()
+        messages.success(request, f'User "{username}" deleted successfully!')
+        return redirect('user_management')
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('user_management')
