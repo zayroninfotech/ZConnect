@@ -53,48 +53,48 @@
   {% endif %}
 
   <!-- Stats Card -->
-  <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 32px;">
-    <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Total Employees</div>
-    <div style="font-size: 28px; font-weight: 700;">{{ total_employees }}</div>
+  <div class="bg-sidebar-r p-5 rounded-lg border mb-5">
+    <div class="text-xs uppercase text-3 mb-2">Total Employees</div>
+    <div class="text-3xl fw-bold">{{ total_employees }}</div>
   </div>
 
   <!-- Employees Table -->
-  <div style="background: var(--bg-sidebar-r); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+  <div class="bg-sidebar-r rounded-lg overflow-hidden border">
     {% if employees %}
-    <table style="width: 100%; border-collapse: collapse;">
+    <table class="w-full" style="border-collapse: collapse;">
       <thead>
-        <tr style="background: var(--bg-active); border-bottom: 1px solid var(--border);">
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Employee</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Email</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Status</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Joined</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Actions</th>
+        <tr class="bg-active border-b">
+          <th class="p-4 text-left fw-600 text-2">Employee</th>
+          <th class="p-4 text-left fw-600 text-2">Email</th>
+          <th class="p-4 text-left fw-600 text-2">Status</th>
+          <th class="p-4 text-left fw-600 text-2">Joined</th>
+          <th class="p-4 text-left fw-600 text-2">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for employee in employees %}
-        <tr style="border-bottom: 1px solid var(--border);">
-          <td style="padding: 16px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+        <tr class="border-b">
+          <td class="p-4">
+            <div class="d-flex align-center gap-2">
               <div class="avatar avatar-32" style="background: var(--accent);">{{ employee.get_initials }}</div>
               <div>
-                <div style="font-weight: 600;">{{ employee.get_display_name }}</div>
-                <div style="font-size: 12px; color: var(--text-3);">@{{ employee.username }}</div>
+                <div class="fw-600">{{ employee.get_display_name }}</div>
+                <div class="text-xs text-3">@{{ employee.username }}</div>
               </div>
             </div>
           </td>
-          <td style="padding: 16px; color: var(--text-2);">{{ employee.email }}</td>
-          <td style="padding: 16px;">
+          <td class="p-4 text-2">{{ employee.email }}</td>
+          <td class="p-4">
             {% if employee.is_active %}
-            <span style="color: #23a55a;">● Active</span>
+            <span class="text-success">● Active</span>
             {% else %}
-            <span style="color: #f23f43;">● Inactive</span>
+            <span class="text-danger">● Inactive</span>
             {% endif %}
           </td>
-          <td style="padding: 16px; color: var(--text-3); font-size: 12px;">
+          <td class="p-4 text-3 text-xs">
             {{ employee.date_joined|date:"M d, Y" }}
           </td>
-          <td style="padding: 16px;">
+          <td class="p-4">
             <button class="btn btn-sm btn-secondary" onclick="manageEmployee({{ employee.id }})">Manage</button>
           </td>
         </tr>
@@ -102,8 +102,8 @@
       </tbody>
     </table>
     {% else %}
-    <div style="padding: 40px; text-align: center; color: var(--text-3);">
-      <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+    <div class="p-10 text-center text-3">
+      <div class="text-5xl mb-4">👥</div>
       <p>No employees yet. Create your first employee to get started!</p>
     </div>
     {% endif %}
@@ -119,15 +119,15 @@
     </div>
     <form method="POST">
       {% csrf_token %}
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Username *</label>
         <input type="text" name="username" class="form-control" placeholder="employee_name" required>
       </div>
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Display Name</label>
         <input type="text" name="display_name" class="form-control" placeholder="Full Name">
       </div>
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Email</label>
         <input type="email" name="email" class="form-control" placeholder="employee@company.com">
       </div>

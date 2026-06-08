@@ -53,69 +53,69 @@
   {% endif %}
 
   <!-- Stats Cards -->
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
-    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Total Users</div>
-      <div style="font-size: 28px; font-weight: 700;">{{ users.count }}</div>
+  <div class="d-grid mb-5" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    <div class="bg-sidebar-r p-5 rounded-lg border">
+      <div class="text-xs uppercase text-3 mb-2">Total Users</div>
+      <div class="text-3xl fw-bold">{{ users.count }}</div>
     </div>
-    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Super Admins</div>
-      <div style="font-size: 28px; font-weight: 700;">{{ super_admins }}</div>
+    <div class="bg-sidebar-r p-5 rounded-lg border">
+      <div class="text-xs uppercase text-3 mb-2">Super Admins</div>
+      <div class="text-3xl fw-bold">{{ super_admins }}</div>
     </div>
-    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">HR Managers</div>
-      <div style="font-size: 28px; font-weight: 700;">{{ hrs }}</div>
+    <div class="bg-sidebar-r p-5 rounded-lg border">
+      <div class="text-xs uppercase text-3 mb-2">HR Managers</div>
+      <div class="text-3xl fw-bold">{{ hrs }}</div>
     </div>
-    <div style="background: var(--bg-sidebar-r); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-      <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Employees</div>
-      <div style="font-size: 28px; font-weight: 700;">{{ employees }}</div>
+    <div class="bg-sidebar-r p-5 rounded-lg border">
+      <div class="text-xs uppercase text-3 mb-2">Employees</div>
+      <div class="text-3xl fw-bold">{{ employees }}</div>
     </div>
   </div>
 
   <!-- Users Table -->
-  <div style="background: var(--bg-sidebar-r); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
-    <table style="width: 100%; border-collapse: collapse;">
+  <div class="bg-sidebar-r rounded-lg overflow-hidden border">
+    <table class="w-full" style="border-collapse: collapse;">
       <thead>
-        <tr style="background: var(--bg-active); border-bottom: 1px solid var(--border);">
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">User</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Email</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Role</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Status</th>
-          <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-2);">Actions</th>
+        <tr class="bg-active border-b">
+          <th class="p-4 text-left fw-600 text-2">User</th>
+          <th class="p-4 text-left fw-600 text-2">Email</th>
+          <th class="p-4 text-left fw-600 text-2">Role</th>
+          <th class="p-4 text-left fw-600 text-2">Status</th>
+          <th class="p-4 text-left fw-600 text-2">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for user in users %}
-        <tr style="border-bottom: 1px solid var(--border);">
-          <td style="padding: 16px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+        <tr class="border-b">
+          <td class="p-4">
+            <div class="d-flex align-center gap-2">
               <div class="avatar avatar-32" style="background: var(--accent);">{{ user.get_initials }}</div>
               <div>
-                <div style="font-weight: 600;">{{ user.get_display_name }}</div>
-                <div style="font-size: 12px; color: var(--text-3);">@{{ user.username }}</div>
+                <div class="fw-600">{{ user.get_display_name }}</div>
+                <div class="text-xs text-3">@{{ user.username }}</div>
               </div>
             </div>
           </td>
-          <td style="padding: 16px; color: var(--text-2);">{{ user.email }}</td>
-          <td style="padding: 16px;">
-            <span style="background: var(--bg-active); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+          <td class="p-4 text-2">{{ user.email }}</td>
+          <td class="p-4">
+            <span class="bg-active px-2 py-1 rounded text-xs fw-600">
               {{ user.get_role_display }}
             </span>
           </td>
-          <td style="padding: 16px;">
+          <td class="p-4">
             {% if user.is_active %}
-            <span style="color: #23a55a;">● Active</span>
+            <span class="text-success">● Active</span>
             {% else %}
-            <span style="color: #f23f43;">● Inactive</span>
+            <span class="text-danger">● Inactive</span>
             {% endif %}
           </td>
-          <td style="padding: 16px;">
+          <td class="p-4">
             <button class="btn btn-sm btn-secondary" onclick="editUser({{ user.id }})">Edit</button>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="5" style="padding: 24px; text-align: center; color: var(--text-3);">No users found</td>
+          <td colspan="5" class="p-6 text-center text-3">No users found</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -132,19 +132,19 @@
     </div>
     <form method="POST">
       {% csrf_token %}
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Username *</label>
         <input type="text" name="username" class="form-control" placeholder="johndoe" required>
       </div>
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Display Name</label>
         <input type="text" name="display_name" class="form-control" placeholder="John Doe">
       </div>
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Email</label>
         <input type="email" name="email" class="form-control" placeholder="john@example.com">
       </div>
-      <div class="form-group">
+      <div class="form-group mb-3">
         <label class="form-label">Password *</label>
         <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
       </div>
