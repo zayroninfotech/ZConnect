@@ -13,7 +13,7 @@
 
   {# ── Left project icons sidebar ── #}
   <nav class="sidebar-projects" id="sidebar-projects">
-    <a href="/dashboard/" class="sp-btn sp-logo" title="ZayronConnect">Z</a>
+    <a href="/dashboard/" class="sp-btn sp-logo" title="Home" onclick="location.reload(); return true">🏠</a>
     <div class="sp-divider"></div>
 
     {% for project in all_projects %}
@@ -36,14 +36,14 @@
 
     {% if user.is_super_admin %}
     <a href="{% url 'user_management' %}" class="sp-btn" title="User Management">
-      👥
+      👤
       <span class="sp-tooltip">User Management</span>
     </a>
     {% endif %}
 
     {% if user.is_super_admin or user.is_staff %}
     <a href="/admin-panel/" class="sp-btn" title="Admin Panel">
-      ⚙️
+      ⚙
       <span class="sp-tooltip">Admin Panel</span>
     </a>
     {% endif %}
