@@ -10,15 +10,15 @@
   --bg-hover:      #2d3052;
   --bg-active:     #313460;
   --bg-msg-hover:  rgba(0,0,0,0.15);
-  --accent:        #7c5cbf;
-  --accent-h:      #6a4fad;
-  --accent-light:  rgba(124,92,191,0.18);
+  --accent:        #1e88e5;
+  --accent-h:      #1565c0;
+  --accent-light:  rgba(30,136,229,0.18);
   --danger:        #f23f43;
   --success:       #23a55a;
   --warn:          #f0b232;
-  --text-1:        #e0e2f0;
-  --text-2:        #9da3b4;
-  --text-3:        #5c6070;
+  --text-1:        #ffffff;
+  --text-2:        #b0b8c7;
+  --text-3:        #6b7684;
   --border:        rgba(255,255,255,0.06);
   --shadow:        0 8px 32px rgba(0,0,0,0.45);
 }
