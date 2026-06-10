@@ -287,6 +287,89 @@ def hr_employees(request):
     })
 
 
+# ─── Unified User Management ──────────────────────────────────────────────────
+@login_required
+def user_management_unified(request):
+    """Unified user management for Super Admin and HR with role-based access"""
+    if not (request.user.is_super_admin_user() or request.user.is_hr_user()):
+        return redirect('dashboard')
+
+    user_role = request.user.role
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+        display_name = request.POST.get('display_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        role = request.POST.get('role', 'employee').strip()
+
+        # Validation
+        if not all([username, email, password]):
+            messages.error(request, 'Username, email, and password are required.')
+        elif User.objects.filter(username=username).exists():
+            messages.error(request, f'Username "{username}" already exists.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, f'Email "{email}" already exists.')
+        elif len(password) < 6:
+            messages.error(request, 'Password must be at least 6 characters.')
+        else:
+            # Role-based access control
+            if user_role == 'super_admin':
+                # Super Admin can create any role
+                if role not in ['super_admin', 'hr', 'employee']:
+                    messages.error(request, 'Invalid role selected.')
+                else:
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password,
+                        display_name=display_name or username,
+                        role=role,
+                        created_by=request.user,
+                        is_active=True
+                    )
+                    messages.success(request, f'User {username} ({role.upper()}) created successfully!')
+                    return redirect('user_management_unified')
+            elif user_role == 'hr':
+                # HR can only create employees
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    display_name=display_name or username,
+                    role='employee',
+                    created_by=request.user,
+                    is_active=True
+                )
+                messages.success(request, f'Employee {username} created successfully!')
+                return redirect('user_management_unified')
+
+    # Get users based on role
+    if user_role == 'super_admin':
+        # Super Admin sees all users
+        all_users = User.objects.all().order_by('-date_joined')
+        stat_super_admins = all_users.filter(role='super_admin').count()
+        stat_hrs = all_users.filter(role='hr').count()
+        stat_employees = all_users.filter(role='employee').count()
+    else:
+        # HR sees only their created employees
+        all_users = User.objects.filter(created_by=request.user).order_by('-date_joined')
+        stat_super_admins = 0
+        stat_hrs = 0
+        stat_employees = all_users.count()
+
+    context = {
+        'users': all_users,
+        'total_users': all_users.count(),
+        'super_admins': stat_super_admins,
+        'hrs': stat_hrs,
+        'employees': stat_employees,
+        'user_role': user_role,
+    }
+
+    return render(request, 'admin_panel/user_management_unified.html', context)
+
+
 @login_required
 def user_management(request):
     """Superadmin user management - create and delete users"""

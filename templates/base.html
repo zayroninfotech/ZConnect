@@ -34,9 +34,9 @@
 
     <div style="flex:1"></div>
 
-    {% if user.is_super_admin %}
-    <a href="{% url 'user_management' %}" class="sp-btn" title="User Management">
-      👤
+    {% if user.role == 'super_admin' or user.role == 'hr' %}
+    <a href="{% url 'user_management_unified' %}" class="sp-btn" title="User Management">
+      👥
       <span class="sp-tooltip">User Management</span>
     </a>
     {% endif %}
