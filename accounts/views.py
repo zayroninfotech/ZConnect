@@ -297,6 +297,46 @@ def user_management_unified(request):
     user_role = request.user.role
 
     if request.method == 'POST':
+        # Check if this is an edit request
+        edit_user_id = request.POST.get('edit_user_id')
+
+        if edit_user_id:
+            # Handle user edit
+            try:
+                user_to_edit = User.objects.get(id=edit_user_id)
+
+                # Check if current user has permission to edit this user
+                if user_role == 'super_admin':
+                    # Super Admin can edit anyone
+                    pass
+                elif user_role == 'hr' and user_to_edit.created_by != request.user:
+                    # HR can only edit users they created
+                    messages.error(request, 'You can only edit users you created.')
+                    return redirect('user_management_unified')
+
+                # Update user fields
+                display_name = request.POST.get('display_name', '').strip()
+                if display_name:
+                    user_to_edit.display_name = display_name
+
+                # Only super admin can change role
+                if user_role == 'super_admin':
+                    role = request.POST.get('role', user_to_edit.role)
+                    if role in ['super_admin', 'hr', 'employee']:
+                        user_to_edit.role = role
+
+                # Update active status
+                is_active = request.POST.get('is_active') == 'true'
+                user_to_edit.is_active = is_active
+
+                user_to_edit.save()
+                messages.success(request, f'User {user_to_edit.username} updated successfully!')
+                return redirect('user_management_unified')
+            except User.DoesNotExist:
+                messages.error(request, 'User not found.')
+                return redirect('user_management_unified')
+
+        # Handle user creation
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
         display_name = request.POST.get('display_name', '').strip()

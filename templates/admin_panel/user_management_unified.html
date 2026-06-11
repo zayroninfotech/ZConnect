@@ -193,6 +193,61 @@
   </div>
 </div>
 
+<!-- Edit User Modals -->
+{% for user_item in users %}
+<div class="modal-backdrop" id="edit-user-modal-{{ user_item.id }}">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>Edit User: {{ user_item.get_display_name }}</h3>
+      <button class="modal-close" onclick="closeModal('edit-user-modal-{{ user_item.id }}')">✕</button>
+    </div>
+    <form method="POST" action="{% url 'user_management_unified' %}" onsubmit="handleEditUser(event, {{ user_item.id }})">
+      {% csrf_token %}
+      <input type="hidden" name="edit_user_id" value="{{ user_item.id }}">
+
+      <div class="form-group mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" value="{{ user_item.username }}" disabled style="opacity: 0.6;">
+      </div>
+
+      <div class="form-group mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" value="{{ user_item.email }}" disabled style="opacity: 0.6;">
+      </div>
+
+      <div class="form-group mb-3">
+        <label class="form-label">Display Name</label>
+        <input type="text" name="display_name" class="form-control" value="{{ user_item.display_name }}" placeholder="Enter display name">
+      </div>
+
+      {% if user_role == 'super_admin' %}
+      <div class="form-group mb-3">
+        <label class="form-label">Role</label>
+        <select name="role" class="form-control">
+          <option value="employee" {% if user_item.role == 'employee' %}selected{% endif %}>Employee</option>
+          <option value="hr" {% if user_item.role == 'hr' %}selected{% endif %}>HR Manager</option>
+          <option value="super_admin" {% if user_item.role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="form-group mb-3">
+        <label class="form-label">Status</label>
+        <select name="is_active" class="form-control">
+          <option value="true" {% if user_item.is_active %}selected{% endif %}>Active</option>
+          <option value="false" {% if not user_item.is_active %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('edit-user-modal-{{ user_item.id }}')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="edit-user-btn-{{ user_item.id }}">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
 <style>
 .modal-backdrop {
   display: none;
@@ -207,7 +262,7 @@
   justify-content: center;
 }
 
-.modal-backdrop.active {
+.modal-backdrop.open {
   display: flex;
 }
 
@@ -524,17 +579,13 @@
 </style>
 
 <script>
-function openModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('active');
-  }
-}
+// Note: openModal() is defined globally in main.js
+// We just need to override closeModal to work with our template
 
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
-    modal.classList.remove('active');
+    modal.classList.remove('open');
   }
 }
 
@@ -544,6 +595,14 @@ function handleCreateUser(event) {
   const originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Creating...';
+  event.target.submit();
+}
+
+function handleEditUser(event, userId) {
+  event.preventDefault();
+  const btn = event.target.querySelector(`#edit-user-btn-${userId}`);
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
   event.target.submit();
 }
 
@@ -569,7 +628,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
     backdrop.addEventListener('click', function(e) {
       if (e.target === this) {
-        this.classList.remove('active');
+        this.classList.remove('open');
       }
     });
   });
@@ -578,8 +637,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Close modal on Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-backdrop.active').forEach(modal => {
-      modal.classList.remove('active');
+    document.querySelectorAll('.modal-backdrop.open').forEach(modal => {
+      modal.classList.remove('open');
     });
   }
 });

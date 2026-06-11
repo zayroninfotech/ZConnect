@@ -27,10 +27,12 @@
     {% endfor %}
 
     <div class="sp-divider"></div>
+    {% if user.role == 'super_admin' or user.role == 'hr' %}
     <a href="/project/create/" class="sp-btn" title="New Project">
       <span style="font-size:22px;font-weight:300">+</span>
       <span class="sp-tooltip">Create Project</span>
     </a>
+    {% endif %}
 
     <div style="flex:1"></div>
 
