@@ -27,7 +27,7 @@
     {% endfor %}
 
     <div class="sp-divider"></div>
-    {% if user.role == 'super_admin' or user.role == 'hr' %}
+    {% if user.role == 'super_admin' or user.role == 'hr' or user.can_create_projects %}
     <a href="/project/create/" class="sp-btn" title="New Project">
       <span style="font-size:22px;font-weight:300">+</span>
       <span class="sp-tooltip">Create Project</span>
@@ -36,7 +36,7 @@
 
     <div style="flex:1"></div>
 
-    {% if user.role == 'super_admin' or user.role == 'hr' %}
+    {% if user.role == 'super_admin' or user.role == 'hr' or user.can_manage_users %}
     <a href="{% url 'user_management_unified' %}" class="sp-btn" title="User Management">
       👥
       <span class="sp-tooltip">User Management</span>

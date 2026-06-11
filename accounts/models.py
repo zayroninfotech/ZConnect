@@ -22,6 +22,8 @@ class User(AbstractUser):
     bio = models.TextField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
+    can_manage_users = models.BooleanField(default=False)  # Control access to user creation
+    can_create_projects = models.BooleanField(default=False)  # Control access to project creation
 
     class Meta:
         db_table = 'zc_users'

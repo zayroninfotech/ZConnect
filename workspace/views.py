@@ -28,9 +28,10 @@ def dashboard(request):
 
 @login_required
 def create_project(request):
-    # Only Super Admin and HR can create projects
-    if request.user.role not in ['super_admin', 'hr']:
-        return JsonResponse({'error': 'Only Super Admin and HR can create projects'}, status=403) if request.method == 'POST' else redirect('dashboard')
+    # Only users with super_admin/hr role OR can_create_projects permission can create projects
+    can_create = request.user.role in ['super_admin', 'hr'] or request.user.can_create_projects
+    if not can_create:
+        return JsonResponse({'error': 'You do not have permission to create projects'}, status=403) if request.method == 'POST' else redirect('dashboard')
 
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()

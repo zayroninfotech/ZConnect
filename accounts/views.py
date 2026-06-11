@@ -291,7 +291,9 @@ def hr_employees(request):
 @login_required
 def user_management_unified(request):
     """Unified user management for Super Admin and HR with role-based access"""
-    if not (request.user.is_super_admin_user() or request.user.is_hr_user()):
+    # Allow access if user is super_admin/hr OR has can_manage_users permission
+    can_manage = request.user.is_super_admin_user() or request.user.is_hr_user() or request.user.can_manage_users
+    if not can_manage:
         return redirect('dashboard')
 
     user_role = request.user.role
@@ -322,12 +324,16 @@ def user_management_unified(request):
                 # Only super admin can change role
                 if user_role == 'super_admin':
                     role = request.POST.get('role', user_to_edit.role)
-                    if role in ['super_admin', 'hr', 'employee']:
+                    if role in ['hr', 'employee']:
                         user_to_edit.role = role
 
                 # Update active status
                 is_active = request.POST.get('is_active') == 'true'
                 user_to_edit.is_active = is_active
+
+                # Update permissions
+                user_to_edit.can_manage_users = request.POST.get('can_manage_users') == 'true'
+                user_to_edit.can_create_projects = request.POST.get('can_create_projects') == 'true'
 
                 user_to_edit.save()
                 messages.success(request, f'User {user_to_edit.username} updated successfully!')
@@ -355,8 +361,8 @@ def user_management_unified(request):
         else:
             # Role-based access control
             if user_role == 'super_admin':
-                # Super Admin can create any role
-                if role not in ['super_admin', 'hr', 'employee']:
+                # Super Admin can create HR or Employee (not Super Admin)
+                if role not in ['hr', 'employee']:
                     messages.error(request, 'Invalid role selected.')
                 else:
                     user = User.objects.create_user(
@@ -366,7 +372,9 @@ def user_management_unified(request):
                         display_name=display_name or username,
                         role=role,
                         created_by=request.user,
-                        is_active=True
+                        is_active=True,
+                        can_manage_users=request.POST.get('can_manage_users') == 'true',
+                        can_create_projects=request.POST.get('can_create_projects') == 'true'
                     )
                     messages.success(request, f'User {username} ({role.upper()}) created successfully!')
                     return redirect('user_management_unified')
@@ -379,7 +387,9 @@ def user_management_unified(request):
                     display_name=display_name or username,
                     role='employee',
                     created_by=request.user,
-                    is_active=True
+                    is_active=True,
+                    can_manage_users=request.POST.get('can_manage_users') == 'true',
+                    can_create_projects=request.POST.get('can_create_projects') == 'true'
                 )
                 messages.success(request, f'Employee {username} created successfully!')
                 return redirect('user_management_unified')
