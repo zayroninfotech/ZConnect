@@ -7,7 +7,11 @@ from .models import Project, ProjectMember, Channel
 
 @login_required
 def dashboard(request):
-    projects = request.user.projects.filter(is_active=True).order_by('-created_at')
+    active_projects = request.user.projects.filter(is_active=True).order_by('-created_at')
+
+    # Admin/HR also see inactive projects they belong to
+    can_manage = request.user.role in ['super_admin', 'hr'] or request.user.can_create_projects
+    inactive_projects = request.user.projects.filter(is_active=False).order_by('-created_at') if can_manage else []
 
     # Try to get direct messages, but handle gracefully if table doesn't exist
     dms = []
@@ -16,13 +20,14 @@ def dashboard(request):
         raw_dms = DirectConversation.objects.filter(participants=request.user).order_by('-updated_at')[:8]
         dms = [{'conv': c, 'other': c.get_other(request.user)} for c in raw_dms if c.get_other(request.user)]
     except Exception:
-        # DirectConversation model/table doesn't exist yet, just show empty DMs
         dms = []
 
     return render(request, 'workspace/dashboard.html', {
-        'projects': projects,
+        'projects': active_projects,
+        'inactive_projects': inactive_projects,
+        'can_manage': can_manage,
         'dms': dms,
-        'all_projects': projects,
+        'all_projects': active_projects,
     })
 
 
@@ -173,11 +178,29 @@ def join_by_invite(request, invite_code):
 
 @login_required
 def delete_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id, created_by=request.user)
+    """Permanently delete a project from the database."""
+    can_manage = request.user.role in ['super_admin', 'hr'] or request.user.can_create_projects
+    project = get_object_or_404(Project, id=project_id)
+    if not (project.created_by == request.user or can_manage):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == 'POST':
-        project.is_active = False
-        project.save()
+        project.delete()
         return JsonResponse({'success': True, 'redirect': '/dashboard/'})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def toggle_project_active(request, project_id):
+    """Activate or deactivate a project (toggle is_active)."""
+    can_manage = request.user.role in ['super_admin', 'hr'] or request.user.can_create_projects
+    project = get_object_or_404(Project, id=project_id)
+    if not (project.created_by == request.user or can_manage):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    if request.method == 'POST':
+        project.is_active = not project.is_active
+        project.save(update_fields=['is_active'])
+        status = 'activated' if project.is_active else 'deactivated'
+        return JsonResponse({'success': True, 'is_active': project.is_active, 'status': status})
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 

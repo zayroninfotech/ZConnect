@@ -11,6 +11,7 @@ urlpatterns = [
     path('project/<int:project_id>/invite/', views.invite_member, name='invite_member'),
     path('project/<int:project_id>/member/<int:user_id>/remove/', views.remove_member, name='remove_member'),
     path('project/<int:project_id>/delete/', views.delete_project, name='delete_project'),
+    path('project/<int:project_id>/toggle-active/', views.toggle_project_active, name='toggle_project_active'),
     path('project/<int:project_id>/settings/', views.project_settings, name='project_settings'),
     path('join/<str:invite_code>/', views.join_by_invite, name='join_by_invite'),
 ]
