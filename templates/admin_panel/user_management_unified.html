@@ -73,12 +73,16 @@
     </div>
     {% else %}
     <div class="bg-sidebar-r p-5 rounded-lg border">
-      <div class="text-xs uppercase text-3 mb-2">Total Employees Created</div>
+      <div class="text-xs uppercase text-3 mb-2">Total Users</div>
       <div class="text-3xl fw-bold">{{ total_users }}</div>
     </div>
     <div class="bg-sidebar-r p-5 rounded-lg border">
-      <div class="text-xs uppercase text-3 mb-2">Active Employees</div>
-      <div class="text-3xl fw-bold">{{ users|length }}</div>
+      <div class="text-xs uppercase text-3 mb-2">HR Managers</div>
+      <div class="text-3xl fw-bold">{{ hrs }}</div>
+    </div>
+    <div class="bg-sidebar-r p-5 rounded-lg border">
+      <div class="text-xs uppercase text-3 mb-2">Employees</div>
+      <div class="text-3xl fw-bold">{{ employees }}</div>
     </div>
     {% endif %}
   </div>
@@ -90,7 +94,7 @@
         <tr class="bg-active border-b">
           <th class="p-4 text-left fw-600 text-2">User</th>
           <th class="p-4 text-left fw-600 text-2">Email</th>
-          {% if user_role == 'super_admin' %}<th class="p-4 text-left fw-600 text-2">Role</th>{% endif %}
+          <th class="p-4 text-left fw-600 text-2">Role</th>
           <th class="p-4 text-left fw-600 text-2">Status</th>
           <th class="p-4 text-left fw-600 text-2">Joined</th>
           <th class="p-4 text-left fw-600 text-2">Actions</th>
@@ -109,13 +113,11 @@
             </div>
           </td>
           <td class="p-4 text-2">{{ user_item.email }}</td>
-          {% if user_role == 'super_admin' %}
           <td class="p-4">
-            <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+            <span class="badge" style="background: {% if user_item.role == 'hr' %}rgba(16,185,129,0.15); color: #10b981{% else %}rgba(59, 130, 246, 0.2); color: #60a5fa{% endif %}; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
               {{ user_item.get_role_display }}
             </span>
           </td>
-          {% endif %}
           <td class="p-4">
             {% if user_item.is_active %}
             <span class="text-success" style="color: #10b981;">● Active</span>
@@ -131,7 +133,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="{% if user_role == 'super_admin' %}6{% else %}5{% endif %}" class="p-6 text-center text-3">
+          <td colspan="6" class="p-6 text-center text-3">
             No users found. Create one to get started!
           </td>
         </tr>
@@ -171,7 +173,6 @@
         <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required autocomplete="new-password">
       </div>
 
-      {% if user_role == 'super_admin' %}
       <div class="form-group">
         <label class="form-label">Role *</label>
         <select name="role" class="form-control" required>
@@ -180,9 +181,6 @@
           <option value="hr">HR Manager</option>
         </select>
       </div>
-      {% else %}
-      <input type="hidden" name="role" value="employee">
-      {% endif %}
 
       <div class="form-group mb-3">
         <label class="form-label">Permissions</label>
@@ -233,7 +231,6 @@
         <input type="text" name="display_name" class="form-control" value="{{ user_item.display_name }}" placeholder="Enter display name">
       </div>
 
-      {% if user_role == 'super_admin' %}
       <div class="form-group mb-3">
         <label class="form-label">Role</label>
         <select name="role" class="form-control">
@@ -241,7 +238,6 @@
           <option value="hr" {% if user_item.role == 'hr' %}selected{% endif %}>HR Manager</option>
         </select>
       </div>
-      {% endif %}
 
       <div class="form-group mb-3">
         <label class="form-label">Status</label>

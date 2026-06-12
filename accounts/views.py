@@ -311,12 +311,9 @@ def user_management_unified(request):
                 user_to_edit = User.objects.get(id=edit_user_id)
 
                 # Check if current user has permission to edit this user
-                if user_role == 'super_admin':
-                    # Super Admin can edit anyone
-                    pass
-                elif user_role == 'hr' and user_to_edit.created_by != request.user:
-                    # HR can only edit users they created
-                    messages.error(request, 'You can only edit users you created.')
+                # Both super_admin and hr can edit any non-super-admin user
+                if user_to_edit.role == 'super_admin' and user_role != 'super_admin':
+                    messages.error(request, 'You cannot edit a Super Admin account.')
                     return redirect('user_management_unified')
 
                 # Update user fields
@@ -324,11 +321,10 @@ def user_management_unified(request):
                 if display_name:
                     user_to_edit.display_name = display_name
 
-                # Only super admin can change role
-                if user_role == 'super_admin':
-                    role = request.POST.get('role', user_to_edit.role)
-                    if role in ['hr', 'employee']:
-                        user_to_edit.role = role
+                # Both super_admin and HR can change role (but not to super_admin)
+                role = request.POST.get('role', user_to_edit.role)
+                if role in ['hr', 'employee']:
+                    user_to_edit.role = role
 
                 # Update active status
                 is_active = request.POST.get('is_active') == 'true'
@@ -383,20 +379,22 @@ def user_management_unified(request):
                     messages.success(request, f'User {username} ({role.upper()}) created successfully!')
                     return redirect('user_management_unified')
             elif user_role == 'hr':
-                # HR can only create employees
+                # HR can create HR or Employee users
+                if role not in ['hr', 'employee']:
+                    role = 'employee'  # default to employee if invalid
                 user = User.objects.create_user(
                     username=username,
                     email=email,
                     password=password,
                     display_name=display_name or username,
-                    role='employee',
+                    role=role,
                     created_by=request.user,
                     is_active=True,
                     can_manage_users=request.POST.get('can_manage_users') == 'true',
                     can_create_projects=request.POST.get('can_create_projects') == 'true',
                     must_change_password=True  # Force password change on first login
                 )
-                messages.success(request, f'Employee {username} created successfully!')
+                messages.success(request, f'{role.upper()} user {username} created successfully!')
                 return redirect('user_management_unified')
 
     # Get users based on role
@@ -407,11 +405,11 @@ def user_management_unified(request):
         stat_hrs = all_users.filter(role='hr').count()
         stat_employees = all_users.filter(role='employee').count()
     else:
-        # HR sees only their created employees
-        all_users = User.objects.filter(created_by=request.user).order_by('-date_joined')
+        # HR sees ALL non-super-admin users (employees + other HRs), excluding themselves
+        all_users = User.objects.exclude(role='super_admin').exclude(id=request.user.id).order_by('-date_joined')
         stat_super_admins = 0
-        stat_hrs = 0
-        stat_employees = all_users.count()
+        stat_hrs = all_users.filter(role='hr').count()
+        stat_employees = all_users.filter(role='employee').count()
 
     context = {
         'users': all_users,
