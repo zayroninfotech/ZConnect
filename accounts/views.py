@@ -31,6 +31,9 @@ def login_view(request):
 
             user.status = 'online'
             user.save(update_fields=['status'])
+            # If user must change password, redirect to change password page
+            if user.must_change_password:
+                return redirect('force_change_password')
             next_url = request.GET.get('next', '/dashboard/')
             return redirect(next_url)
         else:
@@ -374,7 +377,8 @@ def user_management_unified(request):
                         created_by=request.user,
                         is_active=True,
                         can_manage_users=request.POST.get('can_manage_users') == 'true',
-                        can_create_projects=request.POST.get('can_create_projects') == 'true'
+                        can_create_projects=request.POST.get('can_create_projects') == 'true',
+                        must_change_password=True  # Force password change on first login
                     )
                     messages.success(request, f'User {username} ({role.upper()}) created successfully!')
                     return redirect('user_management_unified')
@@ -389,7 +393,8 @@ def user_management_unified(request):
                     created_by=request.user,
                     is_active=True,
                     can_manage_users=request.POST.get('can_manage_users') == 'true',
-                    can_create_projects=request.POST.get('can_create_projects') == 'true'
+                    can_create_projects=request.POST.get('can_create_projects') == 'true',
+                    must_change_password=True  # Force password change on first login
                 )
                 messages.success(request, f'Employee {username} created successfully!')
                 return redirect('user_management_unified')
@@ -466,6 +471,37 @@ def user_management(request):
         'hr_count': hr_users,
         'employee_count': employee_users,
     })
+
+
+# ─── Force Change Password ────────────────────────────────────────────────────
+@login_required
+def force_change_password(request):
+    """Force user to change password on first login"""
+    # If user doesn't need to change password, redirect to dashboard
+    if not request.user.must_change_password:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if not new_password or not confirm_password:
+            messages.error(request, 'Both password fields are required.')
+        elif len(new_password) < 6:
+            messages.error(request, 'Password must be at least 6 characters.')
+        elif new_password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+        else:
+            # Update password and clear the force-change flag
+            request.user.set_password(new_password)
+            request.user.must_change_password = False
+            request.user.status = 'offline'
+            request.user.save()
+            logout(request)
+            messages.success(request, 'Password changed successfully! Please log in with your new password.')
+            return redirect('login')
+
+    return render(request, 'accounts/force_change_password.html')
 
 
 @login_required

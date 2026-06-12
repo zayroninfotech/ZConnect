@@ -24,6 +24,7 @@ class User(AbstractUser):
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     can_manage_users = models.BooleanField(default=False)  # Control access to user creation
     can_create_projects = models.BooleanField(default=False)  # Control access to project creation
+    must_change_password = models.BooleanField(default=False)  # Force password change on first login
 
     class Meta:
         db_table = 'zc_users'

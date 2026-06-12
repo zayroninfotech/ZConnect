@@ -21,6 +21,9 @@ urlpatterns = [
     # HR - Employee Management
     path('hr/employees/', views.hr_employees, name='hr_employees'),
 
+    # Force change password on first login
+    path('change-password/', views.force_change_password, name='force_change_password'),
+
     # Unified User Management (Super Admin & HR)
     path('users-manage/', views.user_management_unified, name='user_management_unified'),
 
