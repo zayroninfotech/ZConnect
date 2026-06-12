@@ -399,14 +399,14 @@ def user_management_unified(request):
 
     # Get users based on role
     if user_role == 'super_admin':
-        # Super Admin sees all users
-        all_users = User.objects.all().order_by('-date_joined')
+        # Super Admin sees all users except themselves
+        all_users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
         stat_super_admins = all_users.filter(role='super_admin').count()
         stat_hrs = all_users.filter(role='hr').count()
         stat_employees = all_users.filter(role='employee').count()
     else:
-        # HR sees ALL non-super-admin users (employees + other HRs), excluding themselves
-        all_users = User.objects.exclude(role='super_admin').exclude(id=request.user.id).order_by('-date_joined')
+        # HR sees ALL non-super-admin users (employees + other HRs), including themselves
+        all_users = User.objects.exclude(role='super_admin').order_by('-date_joined')
         stat_super_admins = 0
         stat_hrs = all_users.filter(role='hr').count()
         stat_employees = all_users.filter(role='employee').count()
@@ -505,19 +505,26 @@ def force_change_password(request):
 @login_required
 @require_POST
 def delete_user(request, user_id):
-    """Delete user from database"""
-    if not request.user.is_super_admin:
+    """Delete user from database — allowed for super_admin, hr, and users with can_manage_users"""
+    can_delete = request.user.role in ['super_admin', 'hr'] or request.user.can_manage_users
+    if not can_delete:
         return JsonResponse({'success': False, 'message': 'Access denied.'})
 
     try:
         user = User.objects.get(id=user_id)
-        if user.is_super_admin:
-            return JsonResponse({'success': False, 'message': 'Cannot delete superadmin users.'})
+
+        # Cannot delete a super_admin account
+        if user.role == 'super_admin':
+            return JsonResponse({'success': False, 'message': 'Cannot delete Super Admin users.'})
+
+        # Cannot delete your own account
+        if user.id == request.user.id:
+            return JsonResponse({'success': False, 'message': 'You cannot delete your own account.'})
 
         username = user.username
         user.delete()
         messages.success(request, f'User "{username}" deleted successfully!')
-        return redirect('user_management')
+        return redirect('user_management_unified')
     except User.DoesNotExist:
         messages.error(request, 'User not found.')
-        return redirect('user_management')
+        return redirect('user_management_unified')
